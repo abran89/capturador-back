@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Proveedor;
 use App\Models\OrdenCompra;
 use App\Models\ProductoOrdenCompra;
+use Illuminate\Database\QueryException;
 
 class FileController extends Controller
 {
@@ -18,6 +19,16 @@ class FileController extends Controller
         $request->validate([
             'codigo_orden' => 'required|string'
         ]);
+
+        $existeOrden = OrdenCompra::where('numero_orden', $request->input('codigo_orden'))->first();
+
+        if($existeOrden){
+            if ($existeOrden->estado === 'Completa') {
+                return response()->json(['message' => 'La orden ya fue completada'], 400);
+            } elseif ($existeOrden->estado === 'Pendiente') {
+                return response()->json(['mensaje' => 'Archivo ya ingresado en sistema']);
+            }
+        }
 
         $filePath = "C:/Users/Lenovo I7/Downloads/Noc-" . $request->input('codigo_orden') . ".DAT";
 
@@ -29,25 +40,31 @@ class FileController extends Controller
 
         DB::beginTransaction();
         try {
+            $primeraLinea = true;
             foreach ($lines as $line) {
                 $data = explode(';', trim($line));
                 if (count($data) < 5) continue;
 
-                $numeroOrden = str_replace('-', '', $data[0]);;
-                $rutProveedor = $data[1];
-                $producto = $data[2];
-                $cantidad = (int) $data[3];
-                $valorUnitario = (int) $data[4];
+                $numeroOrden = trim(str_replace('-', '', $data[0]));
+                $rutProveedor = trim($data[1]);
+                $producto = trim($data[2]);
+                $cantidad = (int) trim($data[3]);
+                $valorUnitario = (int) trim($data[4]);
 
-                $proveedor = Proveedor::firstOrCreate(['rut' => $rutProveedor]);
+                if($primeraLinea){
 
-                $ordenCompra = OrdenCompra::firstOrCreate([
-                    'numero_orden' => $numeroOrden,
-                    'proveedor_id' => $proveedor->id,
-                    'user_id' => auth()->id()
-                ]);
+                    $proveedor = Proveedor::firstOrCreate(['rut' => $rutProveedor]);
 
-                ProductoOrdenCompra::firstOrCreate([
+                    $ordenCompra = OrdenCompra::create([
+                        'numero_orden' => $numeroOrden,
+                        'proveedor_id' => $proveedor->id,
+                        'user_id' => auth()->id()
+                    ]);
+
+                    $primeraLinea = false;
+                }
+
+                ProductoOrdenCompra::create([
                     'orden_compra_id' => $ordenCompra->id,
                     'codigo_producto' => $producto,
                     'cantidad_cajas' => $cantidad,
@@ -57,9 +74,19 @@ class FileController extends Controller
 
             DB::commit();
             return response()->json(['mensaje' => 'Archivo procesado correctamente']);
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (QueryException $e)  {
+
+            if ($e->errorInfo[1] == 1062) { // Código de error para clave única duplicada
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Hay códigos de productos duplicados en el archivo, debe corregir el archivo para continuar',
+                ], 400);
+            }
+            else {
+                DB::rollBack();
             return response()->json(['error' => 'Error al procesar el archivo', 'detalle' => $e->getMessage()], 500);
+            }
+
         }
     }
 }

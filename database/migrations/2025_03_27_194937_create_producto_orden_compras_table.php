@@ -17,8 +17,10 @@ return new class extends Migration
             $table->string('codigo_producto');
             $table->integer('cantidad_cajas');
             $table->integer('valor_unitario');
-            $table->enum('estado', ['pendiente', 'ingresado', 'incompleto', 'nuevo'])->default('pendiente');
+            $table->enum('estado', ['Pendiente', 'Ingresado', 'Modificado', 'Nuevo'])->default('Pendiente');
             $table->timestamps();
+
+            $table->unique(['orden_compra_id', 'codigo_producto']);
         });
     }
 

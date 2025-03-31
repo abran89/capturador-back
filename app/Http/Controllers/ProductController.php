@@ -14,7 +14,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'codigo_orden' => 'required|string',
-            'codigo_producto' => 'required|string',
+            'codigo_producto' => 'required|string'
         ]);
 
         $orden = OrdenCompra::where('numero_orden', $validated['codigo_orden'])->first();
@@ -38,21 +38,24 @@ class ProductController extends Controller
             ], 404);
         }
 
-        // $productoIngresadoExistente = ProductoIngresado::where('producto_orden_compra_id', $producto->id)
-        // ->first();
+        $productoIngresadoExistente = ProductoIngresado::where('producto_orden_compra_id', $producto->id)
+        ->first();
 
-        // if ($productoIngresadoExistente) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'error' => 'El producto ya ha sido ingresado para esta orden de compra',
-        //     ], 400);
-        // }
+        if ($productoIngresadoExistente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'El producto ya ha sido ingresado para esta orden de compra',
+            ], 400);
+        }
 
         $productoIngresado = new ProductoIngresado();
         $productoIngresado->producto_orden_compra_id = $producto->id;
         $productoIngresado->cantidad_cajas = $producto->cantidad_cajas;
         $productoIngresado->user_id = auth()->id();
         $productoIngresado->save();
+
+        $producto->estado = 'Ingresado';
+        $producto->save();
 
         return response()->json([
             'success' => true,
@@ -129,6 +132,17 @@ class ProductController extends Controller
         // Actualizar la cantidad de cajas con el valor validado
         $producto->cantidad_cajas = $validated['cantidad_cajas'];
         $producto->save();
+
+        $productoOrden = ProductoOrdenCompra::find($producto->producto_orden_compra_id);
+
+        if ($productoOrden) {
+
+            if($productoOrden->cantidad_cajas != $producto->cantidad_cajas){
+                $productoOrden->estado = 'Modificado';
+                $productoOrden->save();
+            }
+
+        }
 
         // Devolver la respuesta de éxito
         return response()->json([
