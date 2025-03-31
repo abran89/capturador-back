@@ -152,4 +152,49 @@ class ProductController extends Controller
         ]);
     }
 
+    public function verificarProductosOrden(Request $request)
+    {
+        $validated = $request->validate([
+            'codigo_orden' => 'required|string'
+        ]);
+
+        $orden = OrdenCompra::where('numero_orden', $validated['codigo_orden'])->first();
+
+        if (!$orden) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Orden de compra no encontrada',
+            ], 404);
+        }
+
+        $productosOrden = ProductoOrdenCompra::where('orden_compra_id', $orden->id)->get();
+        $faltantes = [];
+        $todosIngresados = true;
+
+        foreach ($productosOrden as $producto) {
+            $cantidadIngresada = ProductoIngresado::where('producto_orden_compra_id', $producto->id)->sum('cantidad_cajas');
+
+            if ($cantidadIngresada < $producto->cantidad_cajas) {
+                $faltantes[] = [
+                    'codigo_producto' => $producto->codigo_producto,
+                    'cantidad_faltante' => $producto->cantidad_cajas - $cantidadIngresada
+                ];
+                $todosIngresados = false;
+            }
+        }
+
+        if (!$todosIngresados) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Faltan productos por ingresar',
+                'productos_faltantes' => $faltantes
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Todos los productos han sido ingresados correctamente'
+        ]);
+    }
+
 }

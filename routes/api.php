@@ -30,4 +30,5 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/ingresar_producto', [ProductController::class, 'ingresarProducto']);
     Route::get('/productos-ingresados', [ProductController::class, 'obtenerProductosIngresados']);
     Route::put('/modificar_producto/{id}', [ProductController::class, 'actualizarCantidad']);
+    Route::get('/verificar-productos', [ProductController::class, 'verificarProductosOrden']);
 });
