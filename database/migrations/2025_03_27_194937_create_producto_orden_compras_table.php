@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('orden_compra_id')->constrained('ordenes_compras');
             $table->string('codigo_producto');
             $table->integer('cantidad_cajas');
-            $table->decimal('valor_unitario', 8, 2);
-            $table->enum('estado', ['pendiente', 'ingresado', 'incompleto'])->default('pendiente');
+            $table->integer('valor_unitario');
+            $table->enum('estado', ['pendiente', 'ingresado', 'incompleto', 'nuevo'])->default('pendiente');
             $table->timestamps();
         });
     }

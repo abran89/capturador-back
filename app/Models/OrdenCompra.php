@@ -9,9 +9,13 @@ class OrdenCompra extends Model
 {
     use HasFactory;
 
+    protected $table = 'ordenes_compras';
+
     protected $fillable = [
         'numero_orden',
         'proveedor_id',
+        'user_id',
+
     ];
 
     public function productos()

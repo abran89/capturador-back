@@ -1,9 +1,11 @@
 <?php
-
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\ProductController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -16,8 +18,16 @@ use App\Http\Controllers\UserController;
 |
 */
 
+// Rutas públicas
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
 
-Route::middleware(['jwt.auth'])->get('/user', [UserController::class, 'profile']);
+// Rutas protegidas con middleware de autenticación
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('/user', [UserController::class, 'profile']);
+    Route::post('/leer-archivo', [FileController::class, 'readFile']);
+    Route::post('/ingresar_producto', [ProductController::class, 'ingresarProducto']);
+    Route::get('/productos-ingresados', [ProductController::class, 'obtenerProductosIngresados']);
+    Route::put('/modificar_producto/{id}', [ProductController::class, 'actualizarCantidad']);
+});
