@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -56,5 +57,66 @@ class AuthController extends Controller
     {
         JWTAuth::invalidate(JWTAuth::getToken());
         return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    public function loginWeb(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()->withInput()->with('error', 'Credenciales incorrectas.');
+        }
+
+        $remember = $request->has('remember');
+
+        // Crear token JWT
+        $token = JWTAuth::fromUser($user);
+
+        // Guardar el token en la sesión para mantener la autenticación del usuario
+        session(['jwt_token' => $token]);
+
+        // Si el usuario quiere ser recordado
+        if ($remember) {
+            // Crear cookie con el token, durará 1 año (525600 minutos)
+            $cookie = cookie('remember_email', $request->email, 525600);
+            // Redirigir al dashboard con la cookie
+            return redirect()->route('admin.dashboard')->cookie($cookie);
+        }
+
+        // Si no hay "Recordarme", solo redirigir al dashboard
+        return redirect()->route('admin.dashboard');
+    }
+
+    public function logoutWeb(Request $request)
+    {
+        try {
+            // Intenta obtener el token desde la sesión
+            $token = session('jwt_token');
+
+            if ($token) {
+                // Establece el token en el JWTAuth
+                JWTAuth::setToken($token);
+                // Invalidar el token
+                JWTAuth::invalidate($token);
+            }
+
+            // Eliminar el JWT de la sesión
+            $request->session()->forget('jwt_token');
+
+            // Redirigir al login
+            return redirect()->route('login')->with('message', 'Has cerrado sesión correctamente.');
+        } catch (JWTException $e) {
+            // En caso de que haya un error con el token
+            return redirect()->route('login')->with('error', 'No se pudo invalidar el token.');
+        }
     }
 }

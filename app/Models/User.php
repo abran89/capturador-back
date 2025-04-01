@@ -22,6 +22,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+        'role'
     ];
 
     /**
@@ -61,7 +62,9 @@ class User extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'role' => $this->role,  // Asegúrate de incluir el rol
+        ];
     }
 
     public function productosIngresados()
@@ -73,4 +76,5 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(OrdenCompra::class, 'user_id');
     }
+
 }

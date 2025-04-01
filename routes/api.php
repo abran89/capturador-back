@@ -32,3 +32,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/modificar_producto/{id}', [ProductController::class, 'actualizarCantidad']);
     Route::get('/verificar-productos', [ProductController::class, 'verificarProductosOrden']);
 });
+
+
+Route::middleware(['auth:api', 'admin'])->group(function () {
+    Route::get('/admin-dashboard', function () {
+        return response()->json(['message' => '¡Acceso permitido! Eres un administrador.'], 200);
+    });
+});
