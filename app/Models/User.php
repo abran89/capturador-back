@@ -22,7 +22,9 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
-        'role'
+        'role',
+        'estado',
+        'password_changed'
     ];
 
     /**
@@ -43,6 +45,7 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'password_changed' => 'boolean'
     ];
 
       /**

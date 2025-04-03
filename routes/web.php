@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +27,14 @@ Route::get('/login', function () {
 
 Route::get('/logout', [AuthController::class, 'logoutWeb'])->name('logout');
 
-Route::middleware(['admin'])->get('/admin-dashboard', function() {
-    return view('admin.dashboard');
-})->name('admin.dashboard');
+Route::middleware(['admin'])->group(function () {
+
+    Route::get('/admin-dashboard', function() {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/usuarios', [UserController::class, 'index'])->name('admin.usuarios.index');
+    Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
+    Route::post('/usuarios/{id}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
+    Route::delete('/usuarios/{id}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+});

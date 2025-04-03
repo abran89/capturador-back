@@ -19,7 +19,7 @@ use App\Http\Controllers\ProductController;
 */
 
 // Rutas públicas
-Route::post('register', [AuthController::class, 'register']);
+// Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
 // Rutas protegidas con middleware de autenticación
@@ -31,11 +31,5 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/productos-ingresados', [ProductController::class, 'obtenerProductosIngresados']);
     Route::put('/modificar_producto/{id}', [ProductController::class, 'actualizarCantidad']);
     Route::get('/verificar-productos', [ProductController::class, 'verificarProductosOrden']);
-});
-
-
-Route::middleware(['auth:api', 'admin'])->group(function () {
-    Route::get('/admin-dashboard', function () {
-        return response()->json(['message' => '¡Acceso permitido! Eres un administrador.'], 200);
-    });
+    Route::post('/change-password', [UserController::class, 'changePassword']);
 });

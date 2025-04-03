@@ -50,7 +50,16 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        return response()->json(['token' => $token]);
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !$user->estado) {
+            return response()->json(['error' => 'Usuario deshabilitado'], 403);
+        }
+
+        return response()->json([
+        'token' => $token,
+        'password_changed' => $user->password_changed
+        ]);
     }
 
     public function logout()
