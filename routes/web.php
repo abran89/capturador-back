@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrdenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,4 +38,8 @@ Route::middleware(['admin'])->group(function () {
     Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
     Route::post('/usuarios/{id}/toggle', [UserController::class, 'toggleStatus'])->name('usuarios.toggle');
     Route::delete('/usuarios/{id}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+
+    Route::get('/ordenes', [OrdenController::class, 'index'])->name('admin.ordenes.index');
+    Route::get('/ordenes/{id}/productos', [OrdenController::class, 'getProductos']);
+
 });

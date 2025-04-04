@@ -23,10 +23,10 @@ class FileController extends Controller
         $existeOrden = OrdenCompra::where('numero_orden', $request->input('codigo_orden'))->first();
 
         if($existeOrden){
-            if ($existeOrden->estado === 'Completa') {
+            if ($existeOrden->estado === 'Completa' || $existeOrden->estado == "Enviada completa") {
                 return response()->json(['message' => 'La orden ya fue completada'], 400);
-            } elseif ($existeOrden->estado === 'Pendiente') {
-                return response()->json(['mensaje' => 'Archivo ya ingresado en sistema']);
+            } elseif ($existeOrden->estado == 'Pendiente' || $existeOrden->estado == "Enviada incompleta") {
+                return response()->json(['message' => 'Archivo ya ingresado en sistema']);
             }
         }
 

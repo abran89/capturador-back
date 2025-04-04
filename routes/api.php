@@ -32,4 +32,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::put('/modificar_producto/{id}', [ProductController::class, 'actualizarCantidad']);
     Route::get('/verificar-productos', [ProductController::class, 'verificarProductosOrden']);
     Route::post('/change-password', [UserController::class, 'changePassword']);
+
+    Route::post('/generar-archivo', [ProductController::class, 'generarArchivoIngreso']);
 });

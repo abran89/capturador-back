@@ -169,21 +169,18 @@ class ProductController extends Controller
 
         $productosOrden = ProductoOrdenCompra::where('orden_compra_id', $orden->id)->get();
         $faltantes = [];
-        $todosIngresados = true;
 
         foreach ($productosOrden as $producto) {
-            $cantidadIngresada = ProductoIngresado::where('producto_orden_compra_id', $producto->id)->sum('cantidad_cajas');
+            $existeIngreso = ProductoIngresado::where('producto_orden_compra_id', $producto->id)->exists();
 
-            if ($cantidadIngresada < $producto->cantidad_cajas) {
+            if (!$existeIngreso) {
                 $faltantes[] = [
-                    'codigo_producto' => $producto->codigo_producto,
-                    'cantidad_faltante' => $producto->cantidad_cajas - $cantidadIngresada
+                    'codigo_producto' => $producto->codigo_producto
                 ];
-                $todosIngresados = false;
             }
         }
 
-        if (!$todosIngresados) {
+        if (!empty($faltantes)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Faltan productos por ingresar',
@@ -194,6 +191,63 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Todos los productos han sido ingresados correctamente'
+        ]);
+    }
+
+    public function generarArchivoIngreso(Request $request)
+    {
+        $validated = $request->validate([
+            'codigo_orden' => 'required|string',
+            'forzar_envio' => 'required|boolean'
+        ]);
+
+        $orden = OrdenCompra::where('numero_orden', $validated['codigo_orden'])->first();
+
+        if (!$orden) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Orden de compra no encontrada',
+            ], 404);
+        }
+
+        $productosOrden = ProductoOrdenCompra::where('orden_compra_id', $orden->id)->get();
+        $productosIngresados = [];
+
+        foreach ($productosOrden as $producto) {
+            $cantidadIngresada = ProductoIngresado::where('producto_orden_compra_id', $producto->id)->sum('cantidad_cajas');
+
+            if ($cantidadIngresada > 0) {
+                $productosIngresados[] = "{$producto->codigo_producto};{$cantidadIngresada}";
+            }
+        }
+
+        if (empty($productosIngresados)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay productos ingresados para esta orden',
+            ]);
+        }
+
+        // Generar el nombre del archivo
+        $fileName = "ING-{$validated['codigo_orden']}.txt";
+        $filePath = "C:/Users/Lenovo I7/Downloads/$fileName";
+
+        // Guardar los datos en el archivo y verificar si se generó correctamente
+        if (file_put_contents($filePath, implode("\n", $productosIngresados)) === false) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el archivo',
+            ], 500);
+        }
+
+        // Si se generó correctamente, actualizar el estado de la orden
+        $orden->estado = $validated['forzar_envio'] ? 'Enviada incompleta' : 'Enviada completa';
+        $orden->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Archivo generado y estado de la orden actualizado',
+            'file_path' => asset("storage/$fileName")
         ]);
     }
 

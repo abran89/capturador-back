@@ -129,6 +129,9 @@
                                     <a class="nav-link" href="{{ route('admin.usuarios.index') }}">Usuarios</a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('admin.ordenes.index') }}">Ordenes</a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" href="{{ route('logout') }}">Cerrar sesión</a>
                                 </li>
                             </ul>

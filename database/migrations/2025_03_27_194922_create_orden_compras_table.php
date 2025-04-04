@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('numero_orden');
             $table->foreignId('proveedor_id')->constrained('proveedores');
             $table->foreignId('user_id')->constrained('users')->onDelete('restrict');
-            $table->enum('estado', ['Pendiente', 'Completa', 'Enviada'])->default('Pendiente');
+            $table->enum('estado', ['Pendiente', 'Completa', 'Enviada completa', 'Enviada incompleta'])->default('Pendiente');
             $table->timestamps();
         });
     }
